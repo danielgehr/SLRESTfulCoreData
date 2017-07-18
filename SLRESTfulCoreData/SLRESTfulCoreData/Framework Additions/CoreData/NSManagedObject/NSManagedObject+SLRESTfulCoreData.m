@@ -327,30 +327,31 @@ char *const SLRESTfulCoreDataBackgroundThreadActionKey;
     for (NSString *attributeName in [self.class registeredAttributeNames]) {
         id value = [self valueForKey:attributeName];
         
-        if (value) {
-            NSString *JSONObjectKeyPath = [attributeMapping convertManagedObjectAttributeToJSONObjectAttribute:attributeName];
-            id JSONObjectValue = [objectConverter JSONObjectObjectFromManagedObjectObject:value
-                                                                forManagedObjectAttribute:attributeName];
-            
-            if (!JSONObjectValue) {
-                continue;
-            }
-            
-            __block NSMutableDictionary *currentDictionary = rawJSONDictionary;
-            
-            NSArray *JSONObjectKeyPaths = [JSONObjectKeyPath componentsSeparatedByString:@"."];
-            NSUInteger count = JSONObjectKeyPaths.count;
-            [JSONObjectKeyPaths enumerateObjectsUsingBlock:^(NSString *JSONObjectKey, NSUInteger idx, BOOL *stop) {
-                if (idx == count - 1) {
-                    currentDictionary[JSONObjectKey] = JSONObjectValue;
-                } else {
-                    NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
-                    
-                    currentDictionary[JSONObjectKey] = dictionary;
-                    currentDictionary = dictionary;
-                }
-            }];
+        NSString *JSONObjectKeyPath = [attributeMapping convertManagedObjectAttributeToJSONObjectAttribute:attributeName];
+        if ([JSONObjectKeyPath isEqualToString:[[[self class] objectDescription] uniqueIdentifierOfJSONObjects]]) {
+            continue;
         }
+        id JSONObjectValue = [objectConverter JSONObjectObjectFromManagedObjectObject:value
+                                                            forManagedObjectAttribute:attributeName];
+        
+        if (!JSONObjectValue) {
+            continue;
+        }
+        
+        __block NSMutableDictionary *currentDictionary = rawJSONDictionary;
+        
+        NSArray *JSONObjectKeyPaths = [JSONObjectKeyPath componentsSeparatedByString:@"."];
+        NSUInteger count = JSONObjectKeyPaths.count;
+        [JSONObjectKeyPaths enumerateObjectsUsingBlock:^(NSString *JSONObjectKey, NSUInteger idx, BOOL *stop) {
+            if (idx == count - 1) {
+                currentDictionary[JSONObjectKey] = JSONObjectValue;
+            } else {
+                NSMutableDictionary *dictionary = [NSMutableDictionary dictionary];
+                
+                currentDictionary[JSONObjectKey] = dictionary;
+                currentDictionary = dictionary;
+            }
+        }];
     }
     
     return rawJSONDictionary;
@@ -399,7 +400,7 @@ char *const SLRESTfulCoreDataBackgroundThreadActionKey;
         // is a 1-to-many relation
         if (![JSONObject isKindOfClass:NSArray.class]) {
             // make sure JSONObject has correct class
-            *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
+            if (error != nil) *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
             return nil;
         }
         NSArray *JSONObjectsArray = JSONObject;
@@ -410,7 +411,7 @@ char *const SLRESTfulCoreDataBackgroundThreadActionKey;
         for (NSDictionary *rawDictionary in JSONObjectsArray) {
             if (![rawDictionary isKindOfClass:NSDictionary.class]) {
                 // make sure JSONObject has correct class
-                *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
+                if (error != nil) *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
                 return nil;
             }
             
@@ -457,14 +458,14 @@ char *const SLRESTfulCoreDataBackgroundThreadActionKey;
             if (object) {
                 [updatedObjects addObject:object];
             } else {
-                *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
+                if (error != nil) *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
                 return nil;
             }
         }
     } else {
         if (![JSONObject isKindOfClass:NSDictionary.class]) {
             // make sure JSONObject has correct class
-            *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
+           if (error != nil)  *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
             return nil;
         }
         
@@ -475,7 +476,7 @@ char *const SLRESTfulCoreDataBackgroundThreadActionKey;
         if (object) {
             [updatedObjects addObject:object];
         } else {
-            *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
+            if (error != nil) *error = [NSError SLRESTfulCoreDataErrorBecauseBackgroundQueueReturnedUnexpectedJSONObject:JSONObject fromURL:URL];
             return nil;
         }
     }

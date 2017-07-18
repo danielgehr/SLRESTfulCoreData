@@ -37,6 +37,7 @@
 
 + (void)registerDefaultAttribute:(NSString *)attribute forJSONObjectKeyPath:(NSString *)JSONObjectKeyPath;
 + (void)unregisterDefaultAttribute:(NSString *)attribute forJSONObjectKeyPath:(NSString *)JSONObjectKeyPath;
++ (void)useUnderscoreConvention:(BOOL)useUnderscores;
 
 - (void)registerAttribute:(NSString *)attribute forJSONObjectKeyPath:(NSString *)JSONObjectKeyPath;
 - (void)removeAttribute:(NSString *)attribute forJSONObjectKeyPath:(NSString *)JSONObjectKeyPath;

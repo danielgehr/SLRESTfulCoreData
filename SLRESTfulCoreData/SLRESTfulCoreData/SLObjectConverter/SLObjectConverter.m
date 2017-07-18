@@ -29,6 +29,7 @@
 
 char *const SLObjectConverterDefaultDateTimeFormatKey;
 char *const SLObjectConverterDefaultTimeZoneKey;
+char *const SLObjectConverterDefaultDateFormatterKey;
 
 static BOOL NSAttributeTypeIsNSNumber(NSAttributeType attributeType)
 {
@@ -158,6 +159,10 @@ static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary 
 + (NSString *)defaultDateTimeFormat
 {
     return objc_getAssociatedObject(self, &SLObjectConverterDefaultDateTimeFormatKey) ?: @"yyyy-MM-dd'T'HH:mm:ss'Z'";
+}
+
++ (void)setDefaultDateFormatter:(NSDateFormatter *)defaultDateFormatter {
+    objc_setAssociatedObject([SLObjectConverter class], &SLObjectConverterDefaultDateFormatterKey, defaultDateFormatter, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 + (void)setDefaultDateTimeFormat:(NSString *)defaultDateTimeFormat
@@ -300,7 +305,11 @@ static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary 
 {
     NSAttributeType attributeType = [_attributTypesValidationDictionary[managedObjectAttributeName] unsignedIntegerValue];
     
-    if (NSAttributeTypeIsNSNumber(attributeType) || attributeType == NSStringAttributeType) {
+    if (object == nil) {
+        return [NSNull null];
+    } else if (attributeType == NSBooleanAttributeType) {
+        return @([object boolValue]);
+    } else if (NSAttributeTypeIsNSNumber(attributeType) || attributeType == NSStringAttributeType) {
         return object;
     } else if (attributeType == NSDateAttributeType) {
         return [self _stringFromDate:object];
@@ -330,8 +339,11 @@ static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary 
         return nil;
     }
     
-    NSDateFormatter *formatter = [self _dateFormatterWithFormat:self.dateTimeFormat];
-    formatter.timeZone = self.timeZone;
+    NSDateFormatter *formatter = objc_getAssociatedObject([SLObjectConverter class], &SLObjectConverterDefaultDateFormatterKey);
+    if (formatter == nil) {
+        formatter = [self _dateFormatterWithFormat:self.dateTimeFormat];
+        formatter.timeZone = self.timeZone;
+    }
     
     return [formatter stringFromDate:date];
 }
@@ -342,8 +354,11 @@ static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary 
         return nil;
     }
     
-    NSDateFormatter *formatter = [self _dateFormatterWithFormat:self.dateTimeFormat];
-    formatter.timeZone = self.timeZone;
+    NSDateFormatter *formatter = objc_getAssociatedObject([SLObjectConverter class], &SLObjectConverterDefaultDateFormatterKey);
+    if (formatter == nil) {
+        formatter = [self _dateFormatterWithFormat:self.dateTimeFormat];
+        formatter.timeZone = self.timeZone;
+    }
     
     return [formatter dateFromString:string];
 }

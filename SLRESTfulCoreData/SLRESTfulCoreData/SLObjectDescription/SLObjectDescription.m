@@ -30,7 +30,7 @@
 #import <objc/runtime.h>
 
 char *const SLObjectDescriptionDefaultUniqueIdentifierOfJSONObjectsKey;
-
+ 
 static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary *otherDictionary)
 {
     for (id key in otherDictionary) {
@@ -103,7 +103,7 @@ static void mergeDictionaries(NSMutableDictionary *mainDictionary, NSDictionary 
 
 + (NSString *)defaultUniqueIdentifierOfJSONObjects
 {
-    return objc_getAssociatedObject(self, &SLObjectDescriptionDefaultUniqueIdentifierOfJSONObjectsKey) ?: @"id";
+    return objc_getAssociatedObject(self, &SLObjectDescriptionDefaultUniqueIdentifierOfJSONObjectsKey) ?: @"uuid";
 }
 
 - (void)registerCRUDBaseURL:(NSURL *)CRUDBaseURL forRelationship:(NSString *)relationship
